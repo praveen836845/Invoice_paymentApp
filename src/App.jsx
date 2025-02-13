@@ -18,7 +18,7 @@ function App() {
     const [provider, setProvider] = useState(null);
     
     const NETWORK_ID = 421614; // 0x66EED in decimal (Arbitrum Sepolia)
-
+      
     // Shorten wallet address for UI
     const shortenAddress = (address) =>
         `${address.slice(0, 5)}...${address.slice(-4)}`;

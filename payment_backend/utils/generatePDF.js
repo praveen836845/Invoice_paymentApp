@@ -32,7 +32,7 @@ export const generatePDF = async (data, pdfPath) => {
 
                 // Convert Wei to Ether for display
                 const amountInEther = ethers.utils.formatUnits(data.amount, "ether");
-                doc.text(`Amount: ${amountInEther} XFI`);
+                doc.text(`Amount: ${amountInEther} Arb ETH`);
             } catch (err) {
                 console.error("Error converting amount to Ether:", err);
                 doc.text("Error displaying amount in Ether. Check the transaction data.");

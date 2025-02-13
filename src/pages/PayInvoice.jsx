@@ -3,56 +3,42 @@ import axios from "axios";
 import Ethers from "../utils/Ethers";
 import { ethers } from "ethers";
 import { Link } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast"; // Import toast and Toaster
 
 const PayInvoice = ({ address }) => {
     const [invoiceId, setInvoiceId] = useState("");
     const [invoiceDetails, setInvoiceDetails] = useState(null);
     const [loading, setLoading] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState("");
-    const [walletAddress, setWalletAddress] = useState(""); // State for wallet address
+    const [walletAddress, setWalletAddress] = useState("");
     const [receiptUrl, setReceiptUrl] = useState("");
 
-    // // UseEffect hook to fetch wallet address when the component mounts
-    // useEffect(() => {
-    //     console.log("ethers: ",ethers.utils)
-    //     const fetchWalletAddress = async () => {
-    //         try {
-    //             const { provider, signer } = Ethers();
-    //             if (signer) {
-    //                 const address = await signer.getAddress();
-    //                 setWalletAddress(address);
-    //                 console.log("Connected Wallet Address:", address);
-    //             } else {
-    //                 console.log("Ethereum provider is not available.");
-    //             }
-    //         } catch (error) {
-    //             console.error("Error fetching wallet address:", error);
-    //         }
-    //     };
-
-    //     fetchWalletAddress();
-    // }, []); // Only run once on mount
-
     useEffect(() => {
-        // If the address is passed as a prop (connected wallet address), store it in state
         if (address) {
             setWalletAddress(address);
         }
     }, [address]);
 
     const handleFetchInvoice = async () => {
+        // Show loading toast
+        const toastId = toast.loading("Fetching invoice details...");
+
         try {
             const response = await axios.get(`https://payment-invoice.onrender.com/getInvoice/${invoiceId}`);
-            console.log(response);
             const bigno = ethers.BigNumber.from(response.data.invoice.amount.toString());
             const amount = ethers.utils.formatEther(bigno);
 
             response.data.invoice.amount = amount;
-            console.log(typeof (response.data.invoice.amount));
             setInvoiceDetails(response.data.invoice);
+
+            // Dismiss loading toast and show success toast
+            toast.success("Invoice fetched successfully!", { id: toastId });
         } catch (error) {
             console.error("Error fetching invoice:", error);
             setPaymentStatus("Failed to fetch invoice. Please try again.");
+
+            // Dismiss loading toast and show error toast
+            toast.error("Failed to fetch invoice. Please try again.", { id: toastId });
         }
     };
 
@@ -72,72 +58,59 @@ const PayInvoice = ({ address }) => {
         setPaymentStatus("Processing payment...");
         console.log("Payment processing started...");
 
+        // Show loading toast for payment
+        const paymentToastId = toast.loading("Processing payment...");
+
         try {
             const { provider, signer, contract } = Ethers();
 
             if (!contract) {
                 console.log("Ethereum contract not found.");
                 setPaymentStatus("Ethereum environment not found. Install MetaMask and try again.");
+                toast.error("Ethereum environment not found. Install MetaMask and try again.", { id: paymentToastId });
                 return;
             }
 
-            console.log("Contract found:", contract);
-            console.log("invoice detail amt: ", invoiceDetails.amount);
-            // Calculate payment amount in wei
-            console.log(typeof (invoiceDetails.amount));
-            // const paymentAmountInWei=ethers.BigNumber.from(invoiceDetails.amount.toString());
             const paymentAmountInWei = ethers.utils.parseUnits(invoiceDetails.amount.toString(), "ether");
             console.log("Payment amount (in Wei):", paymentAmountInWei);
 
-            // Interact with the contract
-            console.log("Attempting to pay invoice with ID:", invoiceId);
             const tx = await contract.payInvoice(invoiceId, {
                 value: paymentAmountInWei,
             });
 
-            console.log("Transaction sent:", tx);
-
-            // Wait for transaction to be mined
             const receipt = await tx.wait();
-            console.log("Transaction receipt received:", receipt);
-
-            // Update payment status and redirect
             setPaymentStatus("Payment successful! Transaction Hash: " + receipt.transactionHash);
-            console.log("Payment status updated:", "Payment successful!");
 
-            // Call backend to update invoice status
+            // Update invoice status on the backend
             try {
                 const response = await axios.post("https://payment-invoice.onrender.com/updateInvoiceStatus", {
                     invoiceId,
                     transactionHash: receipt.transactionHash,
                 });
-                console.log("Invoice status updated successfully:", response);
                 setReceiptUrl(response.data.receiptPdfUrl);
+                toast.success("Payment successful!", { id: paymentToastId });
             } catch (error) {
                 console.error("Error updating invoice status:", error);
                 setPaymentStatus("Failed to update invoice status.");
+                toast.error("Failed to update invoice status.", { id: paymentToastId });
             }
-
-            // Redirect to payment confirmation page
-            console.log("Redirecting to payment confirmation page...");
-            // window.location.href = `/paymentConfirmation/${receipt.transactionHash}`;
         } catch (error) {
             console.error("Error during payment:", error);
             setPaymentStatus("Payment failed. Please try again.");
-            console.log("Error details:", error);
+            toast.error("Payment failed. Please try again.", { id: paymentToastId });
         } finally {
             setLoading(false);
-            console.log("Payment process completed.");
         }
     };
 
     return (
         <>
+            {/* Add Toaster component to display toasts */}
+
             <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
                 <Link to="/" className="absolute left-0 top-0 bg-green-500 text-white rounded-md px-3 py-3 m-5">Return Home</Link>
                 <h2 className="text-2xl font-semibold mb-6">Pay Invoice</h2>
 
-                {/* Display Wallet Address */}
                 {walletAddress && (
                     <p className="text-lg mb-4">
                         <strong>Connected Wallet Address: </strong>{walletAddress}
@@ -160,8 +133,7 @@ const PayInvoice = ({ address }) => {
 
                 {invoiceDetails && (
                     <div className="mt-6 space-y-4">
-                        <p><strong>Amount:</strong> {invoiceDetails.amount} XFI</p>
-                        {/* <p><strong>Amount:</strong> {ethers.utils.formatUnits(invoiceDetails.amount,"ether")} ETH</p> */}
+                        <p><strong>Amount:</strong> {invoiceDetails.amount} ETH </p>
                         <p><strong>Recipient:</strong> {invoiceDetails.issuer}</p>
                         <p><strong>Due Date:</strong> {new Date(invoiceDetails.dueDate).toLocaleString()}</p>
                         <button
@@ -177,7 +149,6 @@ const PayInvoice = ({ address }) => {
                 {paymentStatus && (
                     <div className="mt-6 text-center text-lg">
                         <p>{paymentStatus}</p>
-                        {console.log("below payment status receipt pdf url: ", receiptUrl)}
                         {receiptUrl && (
                             <div className="mt-4">
                                 <a href={receiptUrl} download>

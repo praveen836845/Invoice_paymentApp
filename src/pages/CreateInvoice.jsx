@@ -3,6 +3,7 @@ import axios from "axios";
 import { ethers } from "ethers";
 import Ethers from "../utils/Ethers";
 import { Link } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
 
 const CreateInvoice = ({ address }) => {
   const [payer, setPayer] = useState("");
@@ -53,12 +54,14 @@ const CreateInvoice = ({ address }) => {
 
   const handleCopyInvoiceId = () => {
     navigator.clipboard.writeText(invoiceId);
-    alert("Invoice ID copied to clipboard!");
+    toast.success("Invoice ID copied to clipboard!");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Form submitted!");
+
+    const loadingToast = toast.loading("Processing transaction...");
 
     const Etherinst = Ethers();
     try {
@@ -72,17 +75,22 @@ const CreateInvoice = ({ address }) => {
       const { provider, signer, contract } = Etherinst;
       console.log("Smart Contract Instance:", contract);
 
+      // Step 1: Execute the transaction
       const tx = await contract.createInvoice(
         payer,
         amountInWei,
         description,
         dueDateTimestamp
       );
-      const receipt = await tx.wait();
 
+      // Step 2: Wait for the transaction to be mined
+      const receipt = await tx.wait(); // Wait for the transaction to be confirmed
+
+      // Step 3: Extract the invoice ID from the transaction receipt
       const invoiceId = receipt.events[0].args.invoiceId.toString();
       console.log("Payer Address:", payer);
 
+      // Step 4: Send the invoice data to the backend
       const response = await axios.post(
         "https://payment-invoice.onrender.com/createInvoice",
         {
@@ -98,21 +106,30 @@ const CreateInvoice = ({ address }) => {
 
       console.log("Response:", response);
 
+      // Step 5: Update state and show success toast
       if (response.status === 201) {
         setInvoiceId(response.data.invoiceId);
         setPaymentUrl(response.data.paymentUrl);
         setQrCode(response.data.qrCode);
         setInvoicePdfUrl(response.data.issuerPdfUrl);
+
+        toast.dismiss(loadingToast);
+        toast.success("Invoice created successfully! 🎉");
       } else {
         console.log("Server Response:", response.data);
+        toast.dismiss(loadingToast);
+        toast.error("Failed to create invoice. Please try again.");
       }
     } catch (error) {
       console.error("Error in handleSubmit:", error.message);
+      toast.dismiss(loadingToast);
+      toast.error(`Error: ${error.message}`);
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <Toaster />
       <Link
         to="/"
         className="absolute left-0 top-0 bg-green-500 text-white rounded-md px-3 py-3 m-5"
@@ -204,7 +221,7 @@ const CreateInvoice = ({ address }) => {
 
       {invoiceId && (
         <div className="mt-6 text-center">
-          <p className="text-lg font-semibold">Invoice Created! 🎉</p>
+          <p className="text-lg font-semibold">Invoice Created! �</p>
           <div className="flex items-center justify-center space-x-4 mt-2">
             <span className="text-blue-600 font-medium">Invoice ID:</span>
             <span className="bg-gray-200 px-3 py-1 rounded-md">

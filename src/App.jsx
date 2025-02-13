@@ -1,3 +1,4 @@
+// App.js
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import CreateInvoice from "./pages/CreateInvoice";
@@ -5,20 +6,19 @@ import ViewInvoice from "./pages/ViewInvoice";
 import PayInvoice from "./pages/PayInvoice";
 import VerifyProof from "./pages/verifyProof";
 import PaymentConfirmation from "./pages/PaymentConfirmation";
-import { ToastContainer } from 'react-toastify';
+import PayInvoiceQr from "./pages/PayInvoiceQr";
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import { toast } from "react-toastify";
-import PayInvoiceQr from "./pages/PayInvoiceQr";
-
+import toast, { Toaster } from "react-hot-toast";
+import ProtectedRoute from './pages/ProtectedRoute';
 function App() {
     const [walletAddress, setWalletAddress] = useState("");
     const [networkError, setNetworkError] = useState("");
     const [signer, setSigner] = useState(null);
     const [provider, setProvider] = useState(null);
-    
-    const NETWORK_ID = 421614; // 0x66EED in decimal (Arbitrum Sepolia)
-      
+
+    const NETWORK_ID = 421614; // Arbitrum Sepolia
+
     // Shorten wallet address for UI
     const shortenAddress = (address) =>
         `${address.slice(0, 5)}...${address.slice(-4)}`;
@@ -42,26 +42,24 @@ function App() {
             const web3Signer = web3Provider.getSigner();
             const address = await web3Signer.getAddress();
 
+            // Check if the wallet is on the correct network
+            const network = await web3Provider.getNetwork();
+            if (network.chainId !== NETWORK_ID) {
+                toast.error("Please switch to Arbitrum Sepolia.");
+                setNetworkError("Please switch to Arbitrum Sepolia.");
+                setWalletAddress(""); // Clear the wallet address if on the wrong network
+                return;
+            }
+
+            // If on the correct network, set the wallet address and provider
             setWalletAddress(address);
             setProvider(web3Provider);
             setSigner(web3Signer);
-            checkNetwork(web3Provider);
+            setNetworkError(""); // Clear any network errors
+            toast.success("Wallet connected successfully!");
         } catch (error) {
             console.error("Failed to connect wallet:", error);
             toast.error("Failed to connect wallet. Check MetaMask.");
-        }
-    };
-
-    // Check if the user is on the correct network
-    const checkNetwork = async (web3Provider) => {
-        if (!window.ethereum) return;
-
-        try {
-            const network = await web3Provider.getNetwork();
-            console.log("Current Network:", network.chainId);
-        } catch (error) {
-            console.error("Error checking network:", error);
-            toast.error("Error checking network.");
         }
     };
 
@@ -73,21 +71,36 @@ function App() {
         }
 
         try {
+            // Try switching to Arbitrum Sepolia
             await window.ethereum.request({
                 method: "wallet_switchEthereumChain",
-                params: [{ chainId: "0x66EED" }],
+                params: [{ chainId: "0x66EEE" }], // Use the correct chain ID
             });
             setNetworkError(""); // Clear the error once switched successfully
+            toast.success("Switched to Arbitrum Sepolia!");
         } catch (switchError) {
+            // If the network is not added, add it
             if (switchError.code === 4902) {
-                addNetwork();
+                await addNetwork();
+                // Retry switching after adding the network
+                try {
+                    await window.ethereum.request({
+                        method: "wallet_switchEthereumChain",
+                        params: [{ chainId: "0x66EEE" }], // Use the correct chain ID
+                    });
+                    setNetworkError("");
+                    toast.success("Switched to Arbitrum Sepolia!");
+                } catch (retryError) {
+                    console.error("Error switching network after adding:", retryError);
+                    toast.error("Failed to switch network. Please connect to Arbitrum Sepolia.");
+                }
             } else {
                 console.error("Error switching network:", switchError);
+                toast.error("Failed to switch network. Please connect to Arbitrum Sepolia.");
             }
         }
     };
 
-    // Add the network if it's not already configured in the wallet
     const addNetwork = async () => {
         if (!window.ethereum) {
             toast.error("MetaMask is not installed!");
@@ -99,20 +112,22 @@ function App() {
                 method: "wallet_addEthereumChain",
                 params: [
                     {
-                        chainId: "0x66EED",
+                        chainId: "0x66EEE", // Use the correct chain ID
                         chainName: "Arbitrum Sepolia",
-                        rpcUrls: ["https://sepolia-rollup.arbitrum.io/rpc"],
+                        rpcUrls: ["https://sepolia-rollup.arbitrum.io/rpc"], // Correct RPC URL
                         nativeCurrency: {
-                            name: "Arbitrum Sepolia",
-                            symbol: "Sepolia Eth",
+                            name: "Ethereum",
+                            symbol: "ETH", // Correct symbol (1-6 characters)
                             decimals: 18,
                         },
-                        blockExplorerUrls: ["https://arbitrum-sepolia.blockscout.com/"],
+                        blockExplorerUrls: ["https://sepolia.arbiscan.io/"], // Correct block explorer
                     },
                 ],
             });
+            toast.success("Arbitrum Sepolia network added!");
         } catch (addError) {
             console.error("Error adding network:", addError);
+            toast.error("Failed to add Arbitrum Sepolia network.");
         }
     };
 
@@ -124,22 +139,35 @@ function App() {
                     setWalletAddress("");
                     toast.error("Wallet disconnected. Please reconnect.");
                 } else {
-                    setWalletAddress(accounts[0]);
                     const web3Provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const network = await web3Provider.getNetwork();
+                    if (network.chainId !== NETWORK_ID) {
+                        setWalletAddress(""); // Clear the wallet address if on the wrong network
+                        // toast.error("Please switch to Arbitrum Sepolia.");
+                        return;
+                    }
+                    setWalletAddress(accounts[0]);
                     setProvider(web3Provider);
                     const web3Signer = web3Provider.getSigner();
                     setSigner(web3Signer);
+                    toast.success("Wallet reconnected!");
                 }
             });
 
-            window.ethereum.on("chainChanged", async () => {
+            window.ethereum.on("chainChanged", async (chainId) => {
                 const web3Provider = new ethers.providers.Web3Provider(window.ethereum);
-                setProvider(web3Provider);
+                const network = await web3Provider.getNetwork();
+                if (network.chainId !== NETWORK_ID) {
+                    setWalletAddress(""); // Clear the wallet address if on the wrong network
+                    // toast.error("Please switch to Arbitrum Sepolia.");
+                    return;
+                }
                 const web3Signer = web3Provider.getSigner();
-                setSigner(web3Signer);
                 const address = await web3Signer.getAddress();
                 setWalletAddress(address);
-                checkNetwork(web3Provider);
+                setProvider(web3Provider);
+                setSigner(web3Signer);
+                // toast.success("Network switched to Arbitrum Sepolia!");
             });
         }
     }, []);
@@ -147,7 +175,6 @@ function App() {
     return (
         <>
             {/* Wallet Connect Button */}
-
             <button
                 onClick={connectWallet}
                 className="wallet-btn bg-blue-600 top-0 absolute right-0 m-5 p-3 text-center rounded-md text-white"
@@ -172,17 +199,59 @@ function App() {
             <Router>
                 <Routes>
                     <Route path="/" element={<Home address={walletAddress} />} />
-                    <Route path="/createInvoice" element={<CreateInvoice address={walletAddress} />} />
-                    <Route path="/verify" element={<VerifyProof address={walletAddress} />} />
-
-                    <Route path="/viewInvoice" element={<ViewInvoice address={walletAddress} />} />
-                    <Route path="/payInvoice" element={<PayInvoice address={walletAddress} />} />
-                    <Route path="/payInvoiceQR/:invoiceId" element={<PayInvoiceQr address={walletAddress} />} />
-                    <Route path="/paymentConfirmation/:transactionHash" element={<PaymentConfirmation address={walletAddress} />} />
+                    <Route
+                        path="/createInvoice"
+                        element={
+                            <ProtectedRoute walletAddress={walletAddress}>
+                                <CreateInvoice address={walletAddress} />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/verify"
+                        element={
+                            <ProtectedRoute walletAddress={walletAddress}>
+                                <VerifyProof address={walletAddress} />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/viewInvoice"
+                        element={
+                            <ProtectedRoute walletAddress={walletAddress}>
+                                <ViewInvoice address={walletAddress} />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/payInvoice"
+                        element={
+                            <ProtectedRoute walletAddress={walletAddress}>
+                                <PayInvoice address={walletAddress} />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/payInvoiceQR/:invoiceId"
+                        element={
+                            <ProtectedRoute walletAddress={walletAddress}>
+                                <PayInvoiceQr address={walletAddress} />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/paymentConfirmation/:transactionHash"
+                        element={
+                            <ProtectedRoute walletAddress={walletAddress}>
+                                <PaymentConfirmation address={walletAddress} />
+                            </ProtectedRoute>
+                        }
+                    />
                 </Routes>
             </Router>
 
-            <ToastContainer />
+            {/* Toaster for displaying toast messages */}
+            <Toaster />
         </>
     );
 }

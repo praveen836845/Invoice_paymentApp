@@ -30,7 +30,7 @@ const Home = () => {
             )} */}
 
             {/* Page Content */}
-            <h1 className="text-3xl font-bold mb-6">Welcome to BlockInvoice</h1>
+            <h1 className="text-3xl font-bold mb-6">Welcome to BlockInvoice Sukhdev Singh</h1>
             <p className="mb-6 text-lg">
                 Blockchain-based invoice creation and payment platform
             </p>

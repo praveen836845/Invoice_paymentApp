@@ -36,10 +36,10 @@ React, Solidity, zkVerify, Ethers.js, Hardhat, Foundry, Arbitrum, IPFS, Express.
 - *Smart Contract Security*: Implemented best practices like reentrancy protection and proper access control.
 
 ## 🌍 Links
-- 🔗 *GitHub Repo*: [Your GitHub Link]
-- 🌐 *Live Demo*: [Your Live Demo Link]
-- 📜 *Smart Contract*: [Your Smart Contract Link]
-- 📄 *Project Documentation*: [Your Documentation Link]
+- 🔗 *GitHub Repo*: [https://github.com/praveen836845/Invoice_paymentApp]
+- 🌐 *Live Demo*: [https://www.loom.com/share/7116e3918cf54a4496123d065898cbff?sid=052c7d46-4fb6-423c-87ce-9225d59dc6cd]
+- 📜 *Smart Contract*: [https://sepolia.arbiscan.io/address/0x66Ad47292ef7ef00f85b439f4A76E687B25ae7Ac]
+- 📄 *Project Documentation*: [https://github.com/praveen836845/Invoice_paymentApp/blob/main/README.md]
 
 ## 🏆 Future Enhancements
 - Support for multiple cryptocurrencies and stablecoins.

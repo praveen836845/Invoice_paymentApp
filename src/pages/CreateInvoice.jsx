@@ -367,7 +367,7 @@ const CreateInvoice = ({ address }) => {
               <input
                 type="text"
                 className="w-full p-3 rounded-md border border-gray-300"
-                placeholder={Item ${index + 1}}
+                placeholder={`Item ${index + 1}`}
                 value={item.itemName}
                 onChange={(e) =>
                   handleItemChange(index, "itemName", e.target.value)

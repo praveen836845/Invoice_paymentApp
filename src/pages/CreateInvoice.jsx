@@ -300,7 +300,7 @@ const CreateInvoice = ({ address }) => {
 
       const invoiceId = receipt.events[0].args.invoiceId.toString();
 
-      const response = await axios.post("http://localhost:3000/createInvoice", {
+      const response = await axios.post("https://payment-invoice.onrender.com/createInvoice", {
         payer,
         description,
         dueDate: dueDateTimestamp,

@@ -1,0 +1,10 @@
+1,1,0,main.verified
+2,-1,0,main.invoiceID
+3,-1,0,main.issuer
+4,-1,0,main.payer
+5,-1,0,main.amount
+6,2,0,main.issuerValid
+7,3,0,main.payerValid
+8,4,0,main.amountValid
+9,5,0,main.combinedValid
+10,-1,0,main.finalValid

@@ -4,6 +4,6 @@ relative_links:
   enabled: true
   collections: true
 include:
+  - README.md
   - PITCHDECK.md
-  - README.md 
   - MARKETING.md

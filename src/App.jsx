@@ -147,6 +147,7 @@ function App() {
     return (
         <>
             {/* Wallet Connect Button */}
+            <img src="https://img.freepik.com/free-vector/colorful-letter-gradient-logo-design_474888-2309.jpg" height="70px" width="100px"/>
             <button
                 onClick={connectWallet}
                 className="wallet-btn bg-blue-600 top-0 absolute right-0 m-5 p-3 text-center rounded-md text-white"

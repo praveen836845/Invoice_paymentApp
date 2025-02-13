@@ -131,4 +131,3 @@ Have questions? Reach out at [g381412@gmail.com](mailto:g381412@gmail.com)
 
 
 Made with ❤ for the zkVerify Web3 Hackathon! 🚀
-

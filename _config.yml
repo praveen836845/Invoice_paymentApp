@@ -1,0 +1,9 @@
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: true
+include:
+  - PITCHDECK.md
+  - README.md 
+  - MARKETING.md

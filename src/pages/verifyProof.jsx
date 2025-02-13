@@ -1,46 +1,3 @@
-// import React, { useState } from "react";
-// import axios from "axios";
-
-// const VerifyProof = () => {
-//   const [invoiceID, setInvoiceID] = useState("");
-//   const [verificationStatus, setVerificationStatus] = useState("");
-
-//   const handleVerify = async () => {
-//     try {
-//       const response = await axios.post("http://localhost:3000/verify", {
-//         invoiceID// Send invoiceID in the request body
-//       });
-//       setVerificationStatus(response.data); // Display the response (e.g., "Verified")
-//     } catch (error) {
-//       setVerificationStatus("Verification failed.");
-//       console.error(error);
-//     }
-//   };
-
-//   return (
-//     <div className="verify-container">
-//       <h2>Verify Invoice</h2>
-//       <input
-//         type="text"
-//         placeholder="Enter Invoice ID"
-//         value={invoiceID}
-//         onChange={(e) => setInvoiceID(e.target.value)}
-//       />
-//       <button onClick={handleVerify} disabled={!invoiceID}>
-//         Verify
-//       </button>
-
-//       {verificationStatus && (
-//         <div className="status-message">
-//           <h3>{verificationStatus}</h3>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default VerifyProof;
-
 
 import React, { useState } from "react";
 import axios from "axios";
@@ -51,7 +8,7 @@ const VerifyProof = () => {
 
   const handleVerify = async () => {
     try {
-      const response = await axios.post("http://localhost:3000/verify", {
+      const response = await axios.post("https://payment-invoice.onrender.com/verify", {
         invoiceID // Send invoiceID in the request body
       });
       setVerificationStatus(response.data); // Display the response (e.g., "Verified")

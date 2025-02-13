@@ -42,7 +42,7 @@ const PayInvoice = ({ address }) => {
 
     const handleFetchInvoice = async () => {
         try {
-            const response = await axios.get(`https://invoicepaymentapp.onrender.com/getInvoice/${invoiceId}`);
+            const response = await axios.get(`https://payment-invoice.onrender.com/getInvoice/${invoiceId}`);
             console.log(response);
             const bigno = ethers.BigNumber.from(response.data.invoice.amount.toString());
             const amount = ethers.utils.formatEther(bigno);
@@ -107,7 +107,7 @@ const PayInvoice = ({ address }) => {
 
             // Call backend to update invoice status
             try {
-                const response = await axios.post("https://invoicepaymentapp.onrender.com/updateInvoiceStatus", {
+                const response = await axios.post("https://payment-invoice.onrender.com/updateInvoiceStatus", {
                     invoiceId,
                     transactionHash: receipt.transactionHash,
                 });

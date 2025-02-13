@@ -59,12 +59,6 @@ function App() {
         try {
             const network = await web3Provider.getNetwork();
             console.log("Current Network:", network.chainId);
-
-            // if (network.chainId !== NETWORK_ID) {
-            //     setNetworkError("Please switch to the Arbitrum Sepolia testnet.");
-            // } else {
-            //     setNetworkError("");
-            // }
         } catch (error) {
             console.error("Error checking network:", error);
             toast.error("Error checking network.");
